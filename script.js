@@ -29,6 +29,12 @@ class Stack {
     return stackString;
   }
 }
+function isNumber(string) {
+  return !isNaN(+string);
+}
+function isString(string) {
+  return isNaN(+string) && !splitters.includes(string);
+}
 
 const operationPrescedance = {
   "^": 2,
@@ -38,8 +44,8 @@ const operationPrescedance = {
   "-": 4,
 };
 const operators = ["+", "-", "*", "/", "^"];
+const splitters = [operators, "(", ")"].flat(Infinity);
 function calculate(input) {
-  const splitters = [operators, "(", ")"].flat(Infinity);
   /*
   // Turn input into tokens
   infix = infix
@@ -62,9 +68,8 @@ function calculate(input) {
   */
   let infix = [];
   let token = "";
-  input = input.split("");
   for (let i = 0; i < input.length; i++) {
-    if (!isNaN(input[i]) && input[i] !== " ") {
+    if (!splitters.includes(input[i]) && input[i] !== " ") {
       token += input[i];
     } else if (token) {
       infix.push(token);
@@ -78,32 +83,40 @@ function calculate(input) {
 
   let priorInfix = infix;
   infix = [];
+  console.log(priorInfix);
   // Replace with all unary (-)'s with (-1 *")
   for (let i = 0; i < priorInfix.length; i++) {
-    if (priorInfix[i] === "-") {
-      if (
-        i === 0 ||
-        operators.includes(priorInfix[i - 1]) ||
-        priorInfix[i - 1] === "("
-      ) {
+    if (
+      priorInfix[i] === "(" &&
+      isNaN(+priorInfix[i - 1]) &&
+      !splitters.includes(priorInfix[i - 1])
+    ) {
+      infix.pop();
+      infix.push(priorInfix[i - 1] + priorInfix[i]);
+      console.log(infix);
+      continue;
+    }
+    // Detects unary operators
+    if (
+      i === 0 ||
+      operators.includes(priorInfix[i - 1]) ||
+      priorInfix[i - 1] === "("
+    ) {
+      if (priorInfix[i] === "-") {
         console.log("Unary:", priorInfix[i]);
         infix.push("-1", "*");
         continue;
       }
-    } else if (priorInfix[i] === "+") {
-      if (
-        i === 0 ||
-        operators.includes(priorInfix[i - 1]) ||
-        priorInfix[i - 1] === "("
-      ) {
+      if (priorInfix[i] === "+") {
         continue;
       }
     }
-    console.log(priorInfix[i - 1]);
+
+    console.log(priorInfix[i], priorInfix[i - 1]);
     infix.push(priorInfix[i]);
   }
-
   console.log(infix.join(", "));
+  return;
   // Turn infix to postfix
   const stack = new Stack();
   let postfix = [];
