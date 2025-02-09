@@ -37,9 +37,10 @@ const operationPrescedance = {
   "+": 4,
   "-": 4,
 };
-function calculate(infix) {
-  const operators = ["+", "-", "*", "/", "^"];
+const operators = ["+", "-", "*", "/", "^"];
+function calculate(input) {
   const splitters = [operators, "(", ")"].flat(Infinity);
+  /*
   // Turn input into tokens
   infix = infix
     .split("")
@@ -58,7 +59,25 @@ function calculate(infix) {
   // Create temp array to format infix
   let priorInfix = infix;
   infix = [];
+  */
+  let infix = [];
+  let token = "";
+  input = input.split("");
+  for (let i = 0; i < input.length; i++) {
+    if (!isNaN(input[i]) && input[i] !== " ") {
+      token += input[i];
+    } else if (token) {
+      infix.push(token);
+      token = "";
+    }
+    if (splitters.includes(input[i])) {
+      infix.push(input[i]);
+    }
+  }
+  if (token) infix.push(token);
 
+  let priorInfix = infix;
+  infix = [];
   // Replace with all unary (-)'s with (-1 *")
   for (let i = 0; i < priorInfix.length; i++) {
     if (priorInfix[i] === "-") {
@@ -69,7 +88,7 @@ function calculate(infix) {
       ) {
         console.log("Unary:", priorInfix[i]);
         infix.push("-1", "*");
-        i += 1;
+        continue;
       }
     } else if (priorInfix[i] === "+") {
       if (
@@ -80,11 +99,11 @@ function calculate(infix) {
         continue;
       }
     }
+    console.log(priorInfix[i - 1]);
     infix.push(priorInfix[i]);
   }
 
   console.log(infix.join(", "));
-
   // Turn infix to postfix
   const stack = new Stack();
   let postfix = [];
