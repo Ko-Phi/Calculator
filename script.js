@@ -42,30 +42,18 @@ const operationPrescedance = {
   "/": 3,
   "+": 4,
   "-": 4,
+  //temp fix
+  sin: 1,
+  cos: 1,
+  tan: 1,
+  sqrt: 1,
+  log: 1,
+  min: 1,
+  max: 1,
 };
 const operators = ["+", "-", "*", "/", "^"];
-const splitters = [operators, "(", ")"].flat(Infinity);
+const splitters = [operators, ",", "(", ")"].flat(Infinity);
 function calculate(input) {
-  /*
-  // Turn input into tokens
-  infix = infix
-    .split("")
-    .filter((char) => char !== " ")
-    .join("");
-
-  // Suround all splitty characters with semicolons in order to split() them later
-  for (let i = 0; i < splitters.length; i++) {
-    infix = infix.replaceAll(`${splitters[i]}`, `;${splitters[i]};`);
-  }
-  infix = infix.replaceAll(";;", ";").split(";");
-  // Temp fix
-  if (infix[0] === "") infix.shift();
-  console.log(infix);
-
-  // Create temp array to format infix
-  let priorInfix = infix;
-  infix = [];
-  */
   let infix = [];
   let token = "";
   for (let i = 0; i < input.length; i++) {
@@ -91,7 +79,7 @@ function calculate(input) {
   }
   if (token) infix.push(token);
 
-  console.log(infix.join(", "));
+  console.log(infix.join(" "));
   // Turn infix to postfix
   const stack = new Stack();
   let postfix = [];
@@ -101,6 +89,11 @@ function calculate(input) {
       postfix.push(infix[i]);
       continue;
     }
+    //Checks if token is a function
+    if (isNaN(+infix[i]) && !splitters.includes(infix[i])) {
+      stack.push(infix[i]);
+    }
+
     if (infix[i] === "(") {
       stack.push("(");
       continue;
@@ -108,39 +101,48 @@ function calculate(input) {
     if (infix[i] === ")") {
       // Pops and pushes the stack to postfix until "(" is current token
       while (stack.peek() !== "(") {
-        postfix.push(stack.pop());
+        if (stack.peek() !== ",") postfix.push(stack.pop());
+        else stack.pop();
       }
       stack.pop();
       continue;
     }
 
-    // Checks if the current operator's prescedance is less than one at top of stack, the stack is empty, or has "("
-    if (
-      operationPrescedance[infix[i]] < operationPrescedance[stack.peek()] ||
-      stack.isEmpty()
-    ) {
-      stack.push(infix[i]);
-    } else {
-      // Pops all operators from the stack w/ a lower prescedance than current operator
-      while (
-        operationPrescedance[stack.peek()] <= operationPrescedance[infix[i]]
+    if (operators.includes(infix[i])) {
+      // Checks if the current operator's prescedance is less than one at top of stack, the stack is empty, or has "("
+      if (
+        operationPrescedance[infix[i]] < operationPrescedance[stack.peek()] ||
+        stack.isEmpty()
       ) {
+        stack.push(infix[i]);
+      } else {
+        // Pops all operators from the stack w/ a lower prescedance than current operator
+        while (
+          operationPrescedance[stack.peek()] <= operationPrescedance[infix[i]]
+        ) {
+          postfix.push(stack.pop());
+        }
+        // Push current operator to stack
+        stack.push(infix[i]);
+      }
+      // console.log(postfix, stack.printStack());
+      continue;
+    }
+
+    if (infix[i] === ",") {
+      while (!(stack.peek() === "(" || stack.peek() === ",")) {
         postfix.push(stack.pop());
       }
-      // Push current operator to stack
       stack.push(infix[i]);
     }
-    // console.log(postfix, stack.printStack());
   }
   while (stack.isEmpty() === false) {
     postfix.push(stack.pop());
   }
 
-  // Temp fix
-  postfix = postfix.filter((token) => token !== "");
-
   console.log(postfix.join(" "));
-
+  return;
+  // Evalulate postfix
   const operationFunctions = {
     "^": exponate,
     "*": multiply,
