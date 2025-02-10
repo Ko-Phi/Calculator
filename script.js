@@ -76,47 +76,22 @@ function calculate(input) {
       token = "";
     }
     if (splitters.includes(input[i])) {
+      if (i === 0 || operators.includes(input[i - 1]) || input[i - 1] === "(") {
+        if (input[i] === "-") {
+          console.log("Unary:", input[i]);
+          infix.push("-1", "*");
+          continue;
+        }
+        if (input[i] === "+") {
+          continue;
+        }
+      }
       infix.push(input[i]);
     }
   }
   if (token) infix.push(token);
 
-  let priorInfix = infix;
-  infix = [];
-  console.log(priorInfix);
-  // Replace with all unary (-)'s with (-1 *")
-  for (let i = 0; i < priorInfix.length; i++) {
-    if (
-      priorInfix[i] === "(" &&
-      isNaN(+priorInfix[i - 1]) &&
-      !splitters.includes(priorInfix[i - 1])
-    ) {
-      infix.pop();
-      infix.push(priorInfix[i - 1] + priorInfix[i]);
-      console.log(infix);
-      continue;
-    }
-    // Detects unary operators
-    if (
-      i === 0 ||
-      operators.includes(priorInfix[i - 1]) ||
-      priorInfix[i - 1] === "("
-    ) {
-      if (priorInfix[i] === "-") {
-        console.log("Unary:", priorInfix[i]);
-        infix.push("-1", "*");
-        continue;
-      }
-      if (priorInfix[i] === "+") {
-        continue;
-      }
-    }
-
-    console.log(priorInfix[i], priorInfix[i - 1]);
-    infix.push(priorInfix[i]);
-  }
   console.log(infix.join(", "));
-  return;
   // Turn infix to postfix
   const stack = new Stack();
   let postfix = [];
@@ -124,18 +99,23 @@ function calculate(input) {
     //Checks if token is a number
     if (!isNaN(+infix[i])) {
       postfix.push(infix[i]);
-    } else if (infix[i] === "(") {
+      continue;
+    }
+    if (infix[i] === "(") {
       stack.push("(");
-    } else if (infix[i] === ")") {
+      continue;
+    }
+    if (infix[i] === ")") {
       // Pops and pushes the stack to postfix until "(" is current token
       while (stack.peek() !== "(") {
         postfix.push(stack.pop());
       }
       stack.pop();
+      continue;
     }
 
     // Checks if the current operator's prescedance is less than one at top of stack, the stack is empty, or has "("
-    else if (
+    if (
       operationPrescedance[infix[i]] < operationPrescedance[stack.peek()] ||
       stack.isEmpty()
     ) {
