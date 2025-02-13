@@ -29,12 +29,6 @@ class Stack {
     return stackString;
   }
 }
-function isNumber(string) {
-  return !isNaN(+string);
-}
-function isString(string) {
-  return isNaN(+string) && !splitters.includes(string);
-}
 
 const operationPrescedance = {
   "^": 2,
@@ -51,11 +45,14 @@ const operationPrescedance = {
   min: 1,
   max: 1,
 };
+
 const operators = ["+", "-", "*", "/", "^"];
 const splitters = [operators, ",", "(", ")"].flat(Infinity);
 function calculate(input) {
   let infix = [];
   let token = "";
+
+  // Turn input string into array of tokens
   for (let i = 0; i < input.length; i++) {
     if (!splitters.includes(input[i]) && input[i] !== " ") {
       token += input[i];
@@ -63,7 +60,9 @@ function calculate(input) {
       infix.push(token);
       token = "";
     }
+    // Check if is splitters
     if (splitters.includes(input[i])) {
+      // Checks if current is a unary operator
       if (i === 0 || operators.includes(input[i - 1]) || input[i - 1] === "(") {
         if (input[i] === "-") {
           console.log("Unary:", input[i]);
@@ -74,6 +73,11 @@ function calculate(input) {
           continue;
         }
       }
+      if (input[i] === "(") {
+        infix.push("*", "(");
+        continue;
+      }
+      // Push current token
       infix.push(input[i]);
     }
   }
