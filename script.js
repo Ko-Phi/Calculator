@@ -30,6 +30,21 @@ class Stack {
   }
 }
 
+class Token {
+  constructor(value, type) {
+    this.value = value;
+    this.type = type;
+  }
+  [Symbol.toPrimitive](hint) {
+    return this.value;
+  }
+}
+function makeToken(type, ...values) {
+  let newToken = { value: values[0], type: type };
+  if (type === "function") newToken.argNumber = values[1];
+  return newToken;
+}
+
 const operationPrescedance = {
   "^": 2,
   "*": 3,
@@ -57,7 +72,11 @@ function calculate(input) {
     if (!splitters.includes(input[i]) && input[i] !== " ") {
       token += input[i];
     } else if (token) {
-      infix.push(token);
+      if (token in operationPrescedance) {
+        infix.push(makeToken("function", token, 2));
+      } else {
+        infix.push(makeToken("number", token));
+      }
       token = "";
     }
     // Check if is splitters
@@ -66,27 +85,83 @@ function calculate(input) {
       if (i === 0 || operators.includes(input[i - 1]) || input[i - 1] === "(") {
         if (input[i] === "-") {
           console.log("Unary:", input[i]);
-          infix.push("-1", "*");
+          infix.push(makeToken("number", "-1"), makeToken("operator", "*"));
           continue;
         }
         if (input[i] === "+") {
           continue;
         }
       }
-      if (input[i] === "(") {
-        infix.push("*", "(");
+      if (
+        input[i] === "(" &&
+        i !== 0 &&
+        !splitters.includes(input[i - 1]) &&
+        input[i - 1] !== " "
+      ) {
+        infix.push(makeToken("operator", "*"), makeToken("parenthesis", "("));
         continue;
       }
-      // Push current token
-      infix.push(input[i]);
+      // Push current splitter
+      if (operators.includes(input[i]))
+        infix.push(makeToken("operator", input[i]));
+      else if (input[i] === ",") infix.push(makeToken("comma", input[i]));
+      else infix.push(makeToken("parenthesis", input[i]));
     }
   }
-  if (token) infix.push(token);
+  if (token) infix.push(makeToken("number", token));
 
-  console.log(infix.join(" "));
+  console.table(infix);
+  console.log(infix.map((token) => token.value).join(" "));
   // Turn infix to postfix
   const stack = new Stack();
   let postfix = [];
+
+  infix.forEach((token) => {
+    if (token.type === "number") {
+      postfix.push(token);
+    }
+    if (token.type === "function") {
+      stack.push(infix[i]);
+    }
+    if (token.value === "(") {
+      stack.push(token);
+    }
+    if (token.value === ")") {
+      while (stack.peek().value !== "(") {
+        if (stack.peek().value !== ",") postfix.push(stack.pop());
+        else stack.pop();
+      }
+      stack.pop();
+    }
+    if (token.type === "operator") {
+      if (
+        stack.isEmpty() ||
+        operationPrescedance[token.value] <
+          operationPrescedance[stack.peek().value]
+      ) {
+        stack.push(token);
+      } else {
+        // Pops all operators from the stack w/ a lower prescedance than current operator
+        while (
+          !stack.isEmpty() &&
+          operationPrescedance[stack.peek().value] <=
+            operationPrescedance[token.value]
+        ) {
+          postfix.push(stack.pop());
+        }
+        // Push current operator to stack
+        stack.push(token);
+      }
+    }
+  });
+  while (stack.isEmpty() === false) {
+    postfix.push(stack.pop());
+  }
+
+  console.table(postfix);
+  console.log(postfix.map((token) => token.value).join(" "));
+  return;
+  /*
   for (let i = 0; i < infix.length; i++) {
     //Checks if token is a number
     if (!isNaN(+infix[i])) {
@@ -143,9 +218,8 @@ function calculate(input) {
   while (stack.isEmpty() === false) {
     postfix.push(stack.pop());
   }
+  */
 
-  console.log(postfix.join(" "));
-  return;
   // Evalulate postfix
   const operationFunctions = {
     "^": exponate,
