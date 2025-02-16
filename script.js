@@ -59,7 +59,15 @@ function calculate(input) {
   let token = "";
 
   // Turn input string into array of chars and check for syntax errors
-  // for (let i = 0; i < inputStr.length; i++) {}
+  let loopString = input;
+  input = [];
+  let parenthesisCount = [0, 0];
+  for (let i = 0; i < loopString.length; i++) {
+    if (loopString[i] === "(") parenthesisCount[0]++;
+    if (loopString[i] === ")") parenthesisCount[1]++;
+    input.push(loopString[i]);
+  }
+  if (parenthesisCount[0] !== parenthesisCount[1]) return "Syntax Error";
 
   // Loop through input to turn into tokens
   for (let i = 0; i < input.length; i++) {
@@ -82,6 +90,7 @@ function calculate(input) {
           infix.push(makeToken("number", "-1"), makeToken("operator", "*"));
           continue;
         } else {
+          // Ignores all non - unary operators
           continue;
         }
       }
