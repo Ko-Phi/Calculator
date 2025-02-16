@@ -30,15 +30,6 @@ class Stack {
   }
 }
 
-class Token {
-  constructor(value, type) {
-    this.value = value;
-    this.type = type;
-  }
-  [Symbol.toPrimitive](hint) {
-    return this.value;
-  }
-}
 function makeToken(type, ...values) {
   let newToken = { value: values[0], type: type };
   if (type === "function") newToken.argNumber = values[1];
@@ -67,7 +58,10 @@ function calculate(input) {
   let infix = [];
   let token = "";
 
-  // Turn input string into array of tokens
+  // Turn input string into array of chars and check for syntax errors
+  // for (let i = 0; i < inputStr.length; i++) {}
+
+  // Loop through input to turn into tokens
   for (let i = 0; i < input.length; i++) {
     if (!splitters.includes(input[i]) && input[i] !== " ") {
       token += input[i];
@@ -87,11 +81,11 @@ function calculate(input) {
           console.log("Unary:", input[i]);
           infix.push(makeToken("number", "-1"), makeToken("operator", "*"));
           continue;
-        }
-        if (input[i] === "+") {
+        } else {
           continue;
         }
       }
+      // Handles implicit multiplication with (
       if (
         input[i] === "(" &&
         i !== 0 &&
@@ -160,66 +154,8 @@ function calculate(input) {
 
   console.table(postfix);
   console.log(postfix.map((token) => token.value).join(" "));
+
   return;
-  /*
-  for (let i = 0; i < infix.length; i++) {
-    //Checks if token is a number
-    if (!isNaN(+infix[i])) {
-      postfix.push(infix[i]);
-      continue;
-    }
-    //Checks if token is a function
-    if (isNaN(+infix[i]) && !splitters.includes(infix[i])) {
-      stack.push(infix[i]);
-    }
-
-    if (infix[i] === "(") {
-      stack.push("(");
-      continue;
-    }
-    if (infix[i] === ")") {
-      // Pops and pushes the stack to postfix until "(" is current token
-      while (stack.peek() !== "(") {
-        if (stack.peek() !== ",") postfix.push(stack.pop());
-        else stack.pop();
-      }
-      stack.pop();
-      continue;
-    }
-
-    if (operators.includes(infix[i])) {
-      // Checks if the current operator's prescedance is less than one at top of stack, the stack is empty, or has "("
-      if (
-        operationPrescedance[infix[i]] < operationPrescedance[stack.peek()] ||
-        stack.isEmpty()
-      ) {
-        stack.push(infix[i]);
-      } else {
-        // Pops all operators from the stack w/ a lower prescedance than current operator
-        while (
-          operationPrescedance[stack.peek()] <= operationPrescedance[infix[i]]
-        ) {
-          postfix.push(stack.pop());
-        }
-        // Push current operator to stack
-        stack.push(infix[i]);
-      }
-      // console.log(postfix, stack.printStack());
-      continue;
-    }
-
-    if (infix[i] === ",") {
-      while (!(stack.peek() === "(" || stack.peek() === ",")) {
-        postfix.push(stack.pop());
-      }
-      stack.push(infix[i]);
-    }
-  }
-  while (stack.isEmpty() === false) {
-    postfix.push(stack.pop());
-  }
-  */
-
   // Evalulate postfix
   const operationFunctions = {
     "^": exponate,
